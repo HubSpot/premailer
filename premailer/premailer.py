@@ -101,7 +101,8 @@ class Premailer(object):
                  include_star_selectors=False,
                  remove_classes=True,
                  strip_important=True,
-                 external_styles=None):
+                 external_styles=None,
+                 style_ids=None):
         self.html = html
         self.base_url = base_url
         self.preserve_internal_links = preserve_internal_links
@@ -115,6 +116,7 @@ class Premailer(object):
             external_styles = [external_styles]
         self.external_styles = external_styles
         self.strip_important = strip_important
+        self.style_ids = set(style_ids) if style_ids else None
 
     def _parse_style_rules(self, css_body, ruleset_index):
         leftover = []
@@ -154,6 +156,17 @@ class Premailer(object):
 
         return rules, leftover
 
+    def _include_style(self, style):
+        if not self.style_ids:
+            return True
+
+        style_id = style.attrib.get('id')
+        if not style_id:
+            return False
+
+        return style_id in self.style_ids
+
+
     def transform(self, pretty_print=True):
         """change the self.html and return it with CSS turned into style
         attributes.
@@ -183,6 +196,9 @@ class Premailer(object):
         for index, style in enumerate(CSSSelector('style')(page)):
             # If we have a media attribute whose value is anything other than
             # 'screen', ignore the ruleset.
+            if not self._include_style(style):
+                continue
+
             media = style.attrib.get('media')
             if media and media != 'screen':
                 continue
@@ -317,8 +333,8 @@ class Premailer(object):
             element.attrib[key] = value
 
 
-def transform(html, base_url=None):
-    return Premailer(html, base_url=base_url).transform()
+def transform(html, **kwargs):
+    return Premailer(html, **kwargs).transform()
 
 
 if __name__ == '__main__':
