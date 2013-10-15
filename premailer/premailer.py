@@ -116,7 +116,7 @@ class Premailer(object):
             external_styles = [external_styles]
         self.external_styles = external_styles
         self.strip_important = strip_important
-        self.style_ids = set(style_ids) if style_ids else None
+        self.style_ids = None if style_ids is None else set(style_ids)
 
     def _parse_style_rules(self, css_body, ruleset_index):
         leftover = []
@@ -157,7 +157,7 @@ class Premailer(object):
         return rules, leftover
 
     def _include_style(self, style):
-        if not self.style_ids:
+        if self.style_ids is None:
             return True
 
         style_id = style.attrib.get('id')
