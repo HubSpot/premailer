@@ -102,7 +102,8 @@ class Premailer(object):
                  remove_classes=True,
                  strip_important=True,
                  external_styles=None,
-                 style_ids=None):
+                 style_ids=None,
+                 to_string_method='html'):
         self.html = html
         self.base_url = base_url
         self.preserve_internal_links = preserve_internal_links
@@ -117,6 +118,7 @@ class Premailer(object):
         self.external_styles = external_styles
         self.strip_important = strip_important
         self.style_ids = None if style_ids is None else set(style_ids)
+        self.to_string_method = to_string_method
 
     def _parse_style_rules(self, css_body, ruleset_index):
         leftover = []
@@ -290,7 +292,7 @@ class Premailer(object):
                     parent.attrib[attr] = urlparse.urljoin(self.base_url,
                         parent.attrib[attr].strip('/'))
 
-        out = etree.tostring(root, method="html", pretty_print=pretty_print)
+        out = etree.tostring(root, method=self.to_string_method, pretty_print=pretty_print)
         if self.strip_important:
             out = _importants.sub('', out)
         return out
